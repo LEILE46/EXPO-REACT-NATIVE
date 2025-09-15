@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useLocalSearchParams } from 'expo-router';
-import { View, Text, ActivityIndicator, StyleSheet, Alert, Image, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  StyleSheet,
+  Alert,
+  Image,
+  ScrollView,
+} from 'react-native';
 
-// Tipo para o filme
 type Filme = {
   id: number;
   nome: string;
@@ -11,24 +18,22 @@ type Filme = {
 };
 
 const DetalhesFilme = () => {
-  const { id } = useLocalSearchParams(); // Usando o hook para acessar os parâmetros da URL
+  const { id } = useLocalSearchParams();
+  const filmeId = typeof id === 'string' ? parseInt(id) : null;
 
-  const [filmes, setFilmes] = useState<Filme[]>([]); // Todos os filmes
-  const [filme, setFilme] = useState<Filme | null>(null); // Filme específico
+  const [filme, setFilme] = useState<Filme | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Verifica se o id foi passado
-    if (!id) return;
+    if (!filmeId) return;
 
     const fetchFilmes = async () => {
       try {
-        setLoading(true); // Ativa o carregamento
-        const response = await fetch(`https://sujeitoprogramador.com/r-api/?api=filmes`);
-        const filmesData = await response.json();
-        setFilmes(filmesData);
+        setLoading(true);
+        const response = await fetch('https://sujeitoprogramador.com/r-api/?api=filmes');
+        const filmesData: Filme[] = await response.json();
 
-        const filmeEncontrado = filmesData.find((f: Filme) => f.id === parseInt(id as string));
+        const filmeEncontrado = filmesData.find((f) => f.id === filmeId);
         setFilme(filmeEncontrado || null);
       } catch (error) {
         console.error('Erro ao carregar detalhes do filme:', error);
@@ -39,19 +44,27 @@ const DetalhesFilme = () => {
     };
 
     fetchFilmes();
-  }, [id]);
+  }, [filmeId]);
 
   if (loading) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#fff" />
+      </View>
+    );
   }
 
   if (!filme) {
-    return <Text>Filme não encontrado.</Text>;
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.erroTexto}>Filme não encontrado.</Text>
+      </View>
+    );
   }
 
   return (
     <ScrollView style={styles.container}>
-      <Image source={{ uri: filme.foto }} style={styles.foto} />
+      <Image source={{ uri: filme.foto }} style={styles.foto} resizeMode="cover" />
       <View style={styles.detailsContainer}>
         <Text style={styles.titulo}>{filme.nome}</Text>
         <Text style={styles.sinopse}>{filme.sinopse}</Text>
@@ -63,15 +76,24 @@ const DetalhesFilme = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#6A4C9C',
     padding: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#6A4C9C',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  erroTexto: {
+    fontSize: 18,
+    color: '#fff',
   },
   foto: {
     width: '100%',
     height: 300,
     borderRadius: 12,
     marginBottom: 20,
-    objectFit: 'cover',
   },
   detailsContainer: {
     paddingHorizontal: 10,
@@ -79,13 +101,13 @@ const styles = StyleSheet.create({
   titulo: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
     marginBottom: 15,
     textAlign: 'center',
   },
   sinopse: {
     fontSize: 16,
-    color: '#555',
+    color: '#f5f5f5',
     lineHeight: 24,
     textAlign: 'justify',
   },
